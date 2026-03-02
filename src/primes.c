@@ -47,18 +47,25 @@ enum find_primes_error find_primes(uint64_t max_limit, uint64_t **output_primes,
     /* 如果 current 未被标记为合数，则它是素数 */
     if (is_composite[current] == 0) {
       /*
-       * 从 current 的平方开始标记倍数
-       * 小于平方的倍数 (如 2*3) 已被更小的素数 (如 2) 标记过
+       * 从 current * current 开始标记其倍数为合数
+       * 因为任何 current 的倍数 (current * k，其中 k < current)
+       * 必然有一个小于 current 的素因子，因此已被之前的更小素数标记过了
+       *
+       * 例如：
+       *   当 current = 5 时（假设 25 < max_limit）
+       *   5 * 2 = 10，已被 2 标记
+       *   5 * 3 = 15，已被 3 标记
+       *   5 * 4 = 20，已被 2 标记
+       *   因此只需从 5 * 5 = 25 开始标记，然后 30、35 等
        */
-      for (uint64_t multiple_num = current * current;
-           multiple_num <= max_limit;) {
+      for (uint64_t mul = current * current; mul <= max_limit; mul += current) {
         // 每个倍数都是合数
-        is_composite[multiple_num] = 1;
+        is_composite[mul] = 1;
 
-        if (max_limit - current < multiple_num) {
+        // 边界和溢出检查
+        if (max_limit - current < mul) {
           break;
         }
-        multiple_num += current;
       }
     }
   }
